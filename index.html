@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CityFix - Қалалық инфрақұрылымдық мәселелер</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-city"></i> CityFix
+            </h1>
+            <button onclick="openModal()" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium shadow hover:bg-blue-50 transition">
+                <i class="fa-solid fa-plus mr-1"></i> Пост қосу
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-6 max-w-2xl">
+
+        <!-- Filters / Navigation Tabs -->
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <button onclick="filterIssues('all')" class="filter-btn active px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Барлығы</button>
+            <button onclick="filterIssues('new')" class="filter-btn px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Жаңа</button>
+            <button onclick="filterIssues('in_progress')" class="filter-btn px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Орындалуда</button>
+            <button onclick="filterIssues('resolved')" class="filter-btn px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Шешілді</button>
+        </div>
+
+        <!-- Issues Feed -->
+        <div id="issues-feed" class="space-y-4">
+            <!-- Динамикалық түрде JavaScript арқылы толтырылады -->
+        </div>
+
+    </main>
+
+    <!-- Modal for Adding Issue -->
+    <div id="issueModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50 px-4">
+        <div class="bg-white rounded-xl max-w-lg w-full p-6 relative shadow-xl">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h2 class="text-lg font-bold mb-4 text-gray-800">Мәселені тіркеу</h2>
+            
+            <form id="issueForm" onsubmit="submitIssue(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Мәселе санаты</label>
+                    <select id="category" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="💡 Жарықтандыру">💡 Жарықтандыру</option>
+                        <option value="🚦 Бағдаршам">🚦 Бағдаршам</option>
+                        <option value="🗑️ Қоқыс/Лас аялдама">🗑️ Қоқыс/Лас аялдама</option>
+                        <option value="🕳️ Жол шұңқыры">🕳️ Жол шұңқыры</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Мекенжайы / Локация</label>
+                    <input type="text" id="address" required placeholder="Мысалы: Абай даңғылы, 45" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Сипаттама</label>
+                    <textarea id="description" rows="3" required placeholder="Мәселені қысқаша сипаттап беріңіз..." class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Сурет жүктеу</label>
+                    <input type="file" id="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">Жіберу</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Бастапқы фейк деректер базасы (Mock Database)
+        let issues = [
+            {
+                id: 1,
+                category: "🚦 Бағдаршам",
+                address: "Сейфуллин көшесі, 12",
+                description: "Бағдаршамның қызыл шамы жанбай тұр, авариялық қауіп бар.",
+                image: "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80",
+                status: "new",
+                statusText: "Тіркелді",
+                statusColor: "bg-red-100 text-red-700",
+                votes: 14
+            },
+            {
+                id: 2,
+                category: "🗑️ Қоқыс/Лас аялдама",
+                address: "Достық даңғылы, 89",
+                description: "Аялдаманың маңында қоқыс жәшігі толып кеткен, тазаланбағанына 3 күн болды.",
+                image: "https://images.unsplash.com/photo-1530587191325-3db32d826c11?auto=format&fit=crop&w=600&q=80",
+                status: "in_progress",
+                statusText: "Жұмысқа алынды",
+                statusColor: "bg-yellow-100 text-yellow-700",
+                votes: 27
+            }
+        ];
+
+        let currentFilter = 'all';
+
+        // Экранға шығару функциясы (Render)
+        function renderIssues() {
+            const feed = document.getElementById('issues-feed');
+            feed.innerHTML = '';
+
+            let filtered = issues;
+            if (currentFilter !== 'all') {
+                filtered = issues.filter(i => i.status === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                feed.innerHTML = `<p class="text-center text-gray-500 py-10">Бұл санатта әзірге мәселелер жоқ.</p>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden";
+                card.innerHTML = `
+                    <div class="p-4 flex justify-between items-center border-b border-gray-100">
+                        <span class="font-semibold text-sm text-gray-700">${item.category}</span>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium ${item.statusColor}">${item.statusText}</span>
+                    </div>
+                    ${item.image ? `<img src="${item.image}" class="w-full h-48 object-cover">` : ''}
+                    <div class="p-4">
+                        <p class="text-xs text-gray-500 mb-1"><i class="fa-solid fa-location-dot mr-1"></i>${item.address}</p>
+                        <p class="text-gray-700 text-sm mb-4">${item.description}</p>
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                            <button onclick="voteIssue(${item.id})" class="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 text-sm font-medium transition">
+                                <i class="fa-solid fa-thumbs-up"></i> <span>Қолдау (${item.votes})</span>
+                            </button>
+                            <span class="text-xs text-gray-400">Жаңа ғана</span>
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(card);
+            });
+        }
+
+        // Модальды терезені ашу/жабу
+        function openModal() { document.getElementById('issueModal').classList.remove('hidden'); document.getElementById('issueModal').classList.add('flex'); }
+        function closeModal() { document.getElementById('issueModal').classList.add('hidden'); document.getElementById('issueModal').classList.remove('flex'); }
+
+        // Жаңа мәселе қосу
+        function submitIssue(event) {
+            event.preventDefault();
+            
+            const category = document.getElementById('category').value;
+            const address = document.getElementById('address').value;
+            const description = document.getElementById('description').value;
+            const imageInput = document.getElementById('image');
+
+            let imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=600&q=80"; // дефолт сурет
+
+            if (imageInput.files && imageInput.files[0]) {
+                imageUrl = URL.createObjectURL(imageInput.files[0]);
+            }
+
+            const newIssue = {
+                id: Date.now(),
+                category,
+                address,
+                description,
+                image: imageUrl,
+                status: "new",
+                statusText: "Тіркелді",
+                statusColor: "bg-red-100 text-red-700",
+                votes: 1
+            };
+
+            issues.unshift(newIssue);
+            renderIssues();
+            closeModal();
+            document.getElementById('issueForm').reset();
+        }
+
+        // Дауыс беру логикасы
+        function voteIssue(id) {
+            const item = issues.find(i => i.id === id);
+            if (item) {
+                item.votes += 1;
+                renderIssues();
+            }
+        }
+
+        // Фильтрация
+        function filterIssues(status) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-600');
+            });
+            event.target.classList.remove('bg-white', 'text-gray-600');
+            event.target.classList.add('bg-blue-600', 'text-white');
+            renderIssues();
+        }
+
+        // Бастапқы іске қосу
+        renderIssues();
+    </script>
+</body>
+</html>
