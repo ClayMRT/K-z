@@ -3,114 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CityFix - Қалалық инфрақұрылымдық мәселелер</title>
+    <title>TazaQala — Қалалық инфрақұрылымдық мәселелер платформасы</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
     <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                <i class="fa-solid fa-city"></i> CityFix
-            </h1>
-            <button onclick="openModal()" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium shadow hover:bg-blue-50 transition">
-                <i class="fa-solid fa-plus mr-1"></i> Пост қосу
-            </button>
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-4xl">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('feed')">
+                <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md">
+                    <i class="fa-solid fa-city text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">TazaQala</h1>
+                    <p class="text-xs text-slate-400">Қаламызды бірге түзетейік</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-medium text-sm shadow-md transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> <span>Мәселе қосу</span>
+                </button>
+            </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="container mx-auto px-4 py-6 max-w-2xl">
+    <main class="container mx-auto px-4 py-6 max-w-4xl flex-grow">
+
+        <!-- Stats / Dashboard Bar -->
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <span class="text-xs text-slate-400 font-medium block mb-1">Барлық мәселе</span>
+                <span id="stat-total" class="text-xl font-bold text-slate-800">0</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <span class="text-xs text-slate-400 font-medium block mb-1">Орындалуда</span>
+                <span id="stat-progress" class="text-xl font-bold text-amber-600">0</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
+                <span class="text-xs text-slate-400 font-medium block mb-1">Шешілді</span>
+                <span id="stat-resolved" class="text-xl font-bold text-emerald-600">0</span>
+            </div>
+        </div>
 
         <!-- Filters / Navigation Tabs -->
-        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <button onclick="filterIssues('all')" class="filter-btn active px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Барлығы</button>
-            <button onclick="filterIssues('new')" class="filter-btn px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Жаңа</button>
-            <button onclick="filterIssues('in_progress')" class="filter-btn px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Орындалуда</button>
-            <button onclick="filterIssues('resolved')" class="filter-btn px-4 py-2 bg-white text-gray-600 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Шешілді</button>
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none">
+            <button onclick="filterIssues('all')" class="filter-btn active px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm transition">Барлығы</button>
+            <button onclick="filterIssues('new')" class="filter-btn px-4 py-2 bg-white text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm transition border border-slate-100">Тіркелді</button>
+            <button onclick="filterIssues('in_progress')" class="filter-btn px-4 py-2 bg-white text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm transition border border-slate-100">Жұмысқа алынды</button>
+            <button onclick="filterIssues('resolved')" class="filter-btn px-4 py-2 bg-white text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm transition border border-slate-100">Шешілді</button>
         </div>
 
         <!-- Issues Feed -->
-        <div id="issues-feed" class="space-y-4">
+        <div id="issues-feed" class="space-y-6">
             <!-- Динамикалық түрде JavaScript арқылы толтырылады -->
+        </div>
+
+        <!-- Single Issue Detail View (Hidden by default) -->
+        <div id="issue-detail-view" class="hidden">
+            <button onclick="backToFeed()" class="mb-4 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-arrow-left"></i> Тізімге қайту
+            </button>
+            <div id="detail-content" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden p-6">
+                <!-- Толық ақпарат және пікірлер осында түседі -->
+            </div>
         </div>
 
     </main>
 
     <!-- Modal for Adding Issue -->
-    <div id="issueModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50 px-4">
-        <div class="bg-white rounded-xl max-w-lg w-full p-6 relative shadow-xl">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+    <div id="issueModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center transition">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <h2 class="text-lg font-bold mb-4 text-gray-800">Мәселені тіркеу</h2>
+            <h2 class="text-xl font-bold mb-5 text-slate-900">Жаңа мәселені тіркеу</h2>
             
-            <form id="issueForm" onsubmit="submitIssue(event)">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Мәселе санаты</label>
-                    <select id="category" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="💡 Жарықтандыру">💡 Жарықтандыру</option>
-                        <option value="🚦 Бағдаршам">🚦 Бағдаршам</option>
-                        <option value="🗑️ Қоқыс/Лас аялдама">🗑️ Қоқыс/Лас аялдама</option>
-                        <option value="🕳️ Жол шұңқыры">🕳️ Жол шұңқыры</option>
+            <form id="issueForm" onsubmit="submitIssue(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Мәселе санаты</label>
+                    <select id="category" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                        <option value="💡 Жарықтандыру">💡 Жарықтандыру мәселесі</option>
+                        <option value="🚦 Бағдаршам">🚦 Істемейтін бағдаршам</option>
+                        <option value="🗑️ Лас аялдама/Қоқыс">🗑️ Лас аялдама немесе қоқыс</option>
+                        <option value="🕳️ Жол шұңқыры">🕳️ Жол шұңқыры / Асфальт сынуы</option>
+                        <option value="⚠️ Басқа қауіпті аймақ">⚠️ Басқа да инфрақұрылымдық ақау</option>
                     </select>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Мекенжайы / Локация</label>
-                    <input type="text" id="address" required placeholder="Мысалы: Абай даңғылы, 45" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Нақты мекенжайы</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-location-dot"></i></span>
+                        <input type="text" id="address" required placeholder="Мысалы: Абай даңғылы, 45 (немесе Керемет шағынауданы)" class="w-full border border-slate-200 rounded-xl pl-10 pr-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50">
+                    </div>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Сипаттама</label>
-                    <textarea id="description" rows="3" required placeholder="Мәселені қысқаша сипаттап беріңіз..." class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Мәселенің сипаттамасы</label>
+                    <textarea id="description" rows="3" required placeholder="Мәселені толығырақ сипаттап жазыңыз..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50"></textarea>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Сурет жүктеу</label>
-                    <input type="file" id="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Суретті жүктеу (немесе сілтеме)</label>
+                    <input type="file" id="imageFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-xl p-1 bg-slate-50">
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition">Жіберу</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-500/25 transition">Постты жариялау</button>
             </form>
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="container mx-auto px-4 text-center text-xs text-slate-400 max-w-4xl">
+            <p>&copy; 2026 TazaQala. Қалалық инфрақұрылымды жақсартуға арналған ашық платформа.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Бэкенд және Фронтенд логикасы -->
     <script>
-        // Бастапқы фейк деректер базасы (Mock Database)
-        let issues = [
+        // Бастапқы деректер (Егер localStorage бос болса жүктеледі)
+        const defaultIssues = [
             {
-                id: 1,
+                id: 1710000001,
                 category: "🚦 Бағдаршам",
                 address: "Сейфуллин көшесі, 12",
-                description: "Бағдаршамның қызыл шамы жанбай тұр, авариялық қауіп бар.",
-                image: "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=600&q=80",
+                description: "Бағдаршамның қызыл шамы жанбай тұр, көліктер жол таласып жатыр, шұғыл түрде жөндеу қажет.",
+                image: "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=800&q=80",
                 status: "new",
                 statusText: "Тіркелді",
-                statusColor: "bg-red-100 text-red-700",
-                votes: 14
+                statusColor: "bg-red-50 text-red-600 border border-red-100",
+                votes: 14,
+                date: "Бүгін, 14:20",
+                comments: [
+                    { author: "Қуаныш", text: "Шынымен де, кешке мүлде көрінбейді!", date: "Бүгін, 15:00" },
+                    { author: "Айжан", text: "Жол полициясына хабарладым.", date: "Бүгін, 15:30" }
+                ]
             },
             {
-                id: 2,
-                category: "🗑️ Қоқыс/Лас аялдама",
+                id: 1710000002,
+                category: "🗑️ Лас аялдама/Қоқыс",
                 address: "Достық даңғылы, 89",
-                description: "Аялдаманың маңында қоқыс жәшігі толып кеткен, тазаланбағанына 3 күн болды.",
-                image: "https://images.unsplash.com/photo-1530587191325-3db32d826c11?auto=format&fit=crop&w=600&q=80",
+                description: "Аялдаманың маңындағы қоқыс жәшігі толып кеткен, иісі шығып жатыр.",
+                image: "https://images.unsplash.com/photo-1530587191325-3db32d826c11?auto=format&fit=crop&w=800&q=80",
                 status: "in_progress",
                 statusText: "Жұмысқа алынды",
-                statusColor: "bg-yellow-100 text-yellow-700",
-                votes: 27
+                statusColor: "bg-amber-50 text-amber-600 border border-amber-100",
+                votes: 27,
+                date: "Кеше, 10:15",
+                comments: [
+                    { author: "Коммуналдық қызмет", text: "Тазарту бригадасы жолға шықты.", date: "Кеше, 12:00" }
+                ]
             }
         ];
 
+        // Деректерді localStorage арқылы басқару (Шынайы бэкенд логикасы сияқты жұмыс істейді)
+        let issues = JSON.parse(localStorage.getItem('tazaqala_issues')) || defaultIssues;
         let currentFilter = 'all';
+        let activeIssueId = null;
 
-        // Экранға шығару функциясы (Render)
+        function saveToStorage() {
+            localStorage.setItem('tazaqala_issues', JSON.stringify(issues));
+            updateStats();
+        }
+
+        // Статистиканы жаңарту
+        function updateStats() {
+            document.getElementById('stat-total').innerText = issues.length;
+            document.getElementById('stat-progress').innerText = issues.filter(i => i.status === 'in_progress').length;
+            document.getElementById('stat-resolved').innerText = issues.filter(i => i.status === 'resolved').length;
+        }
+
+        // Экранға шығару функциясы (Render Feed)
         function renderIssues() {
             const feed = document.getElementById('issues-feed');
             feed.innerHTML = '';
@@ -121,35 +195,164 @@
             }
 
             if (filtered.length === 0) {
-                feed.innerHTML = `<p class="text-center text-gray-500 py-10">Бұл санатта әзірге мәселелер жоқ.</p>`;
+                feed.innerHTML = `
+                    <div class="bg-white rounded-2xl p-10 text-center border border-slate-100 shadow-sm">
+                        <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
+                        <p class="text-slate-500 text-sm font-medium">Бұл санатта әзірге мәселелер жоқ.</p>
+                    </div>`;
                 return;
             }
 
             filtered.forEach(item => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden";
+                card.className = "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition";
                 card.innerHTML = `
-                    <div class="p-4 flex justify-between items-center border-b border-gray-100">
-                        <span class="font-semibold text-sm text-gray-700">${item.category}</span>
-                        <span class="px-2.5 py-1 rounded-full text-xs font-medium ${item.statusColor}">${item.statusText}</span>
+                    <div class="p-4 flex justify-between items-center border-b border-slate-50">
+                        <span class="font-bold text-xs text-slate-700">${item.category}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${item.statusColor}">${item.statusText}</span>
+                            <!-- Админ статусын өзгерту батырмасы -->
+                            <select onchange="changeStatus(${item.id}, this.value)" class="text-xs bg-slate-100 border border-slate-200 rounded-lg p-1 text-slate-600 focus:outline-none">
+                                <option value="" disabled selected>Статусты өзгерту</option>
+                                <option value="new">Тіркелді</option>
+                                <option value="in_progress">Жұмысқа алынды</option>
+                                <option value="resolved">Шешілді</option>
+                            </select>
+                        </div>
                     </div>
-                    ${item.image ? `<img src="${item.image}" class="w-full h-48 object-cover">` : ''}
-                    <div class="p-4">
-                        <p class="text-xs text-gray-500 mb-1"><i class="fa-solid fa-location-dot mr-1"></i>${item.address}</p>
-                        <p class="text-gray-700 text-sm mb-4">${item.description}</p>
-                        <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-                            <button onclick="voteIssue(${item.id})" class="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 text-sm font-medium transition">
-                                <i class="fa-solid fa-thumbs-up"></i> <span>Қолдау (${item.votes})</span>
-                            </button>
-                            <span class="text-xs text-gray-400">Жаңа ғана</span>
+                    ${item.image ? `<div onclick="openDetail(${item.id})" class="cursor-pointer overflow-hidden"><img src="${item.image}" class="w-full h-56 object-cover hover:scale-105 transition duration-500"></div>` : ''}
+                    <div class="p-5">
+                        <p class="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-blue-500"></i>${item.address}</p>
+                        <p onclick="openDetail(${item.id})" class="text-slate-800 text-sm mb-4 cursor-pointer hover:text-blue-600 transition leading-relaxed">${item.description}</p>
+                        <div class="flex justify-between items-center pt-3 border-t border-slate-50">
+                            <div class="flex items-center gap-4">
+                                <button onclick="voteIssue(${item.id})" class="flex items-center gap-1.5 text-slate-600 hover:text-blue-600 text-xs font-bold transition bg-slate-50 hover:bg-blue-50 px-3 py-2 rounded-xl">
+                                    <i class="fa-solid fa-thumbs-up text-blue-500"></i> <span>Қолдау (${item.votes})</span>
+                                </button>
+                                <button onclick="openDetail(${item.id})" class="flex items-center gap-1.5 text-slate-600 hover:text-blue-600 text-xs font-bold transition bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-xl">
+                                    <i class="fa-solid fa-comments text-slate-400"></i> <span>Пікірлер (${item.comments ? item.comments.length : 0})</span>
+                                </button>
+                            </div>
+                            <span class="text-xs text-slate-400 font-medium">${item.date}</span>
                         </div>
                     </div>
                 `;
                 feed.appendChild(card);
             });
+            updateStats();
         }
 
-        // Модальды терезені ашу/жабу
+        // Толық ақпарат және пікірлар терезесіне өту
+        function openDetail(id) {
+            activeIssueId = id;
+            const item = issues.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('issues-feed').parentElement.querySelector('.flex.gap-2.mb-6').classList.add('hidden');
+            document.getElementById('issues-feed').classList.add('hidden');
+            document.querySelector('.grid.grid-cols-3.gap-3').classList.add('hidden');
+            
+            const detailView = document.getElementById('issue-detail-view');
+            detailView.classList.remove('hidden');
+
+            let commentsHtml = '';
+            if (item.comments && item.comments.length > 0) {
+                item.comments.forEach(c => {
+                    commentsHtml += `
+                        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 mb-2.5">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-xs text-slate-800">${c.author}</span>
+                                <span class="text-[10px] text-slate-400">${c.date}</span>
+                            </div>
+                            <p class="text-xs text-slate-600">${c.text}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                commentsHtml = `<p class="text-xs text-slate-400 text-center py-4">Әзірге пікірлер жоқ. Бірінші болып пікір қалдырыңыз!</p>`;
+            }
+
+            document.getElementById('detail-content').innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-bold text-xs text-slate-700">${item.category}</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${item.statusColor}">${item.statusText}</span>
+                </div>
+                ${item.image ? `<img src="${item.image}" class="w-full h-72 object-cover rounded-2xl mb-4 shadow-sm">` : ''}
+                <p class="text-xs text-slate-400 font-medium mb-1"><i class="fa-solid fa-location-dot text-blue-500"></i> ${item.address}</p>
+                <p class="text-slate-800 text-sm mb-6 leading-relaxed font-medium">${item.description}</p>
+                
+                <div class="border-t border-slate-100 pt-6">
+                    <h3 class="font-bold text-sm text-slate-900 mb-4">Тлқылаулар мен пікірлер</h3>
+                    <div class="space-y-2 mb-6">${commentsHtml}</div>
+                    
+                    <form onsubmit="addComment(event, ${item.id})" class="flex gap-2">
+                        <input type="text" id="commentAuthor" required placeholder="Атыңыз..." class="w-1/3 border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                        <input type="text" id="commentText" required placeholder="Пікір жазу..." class="flex-grow border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-md">Жіберу</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function backToFeed() {
+            document.getElementById('issue-detail-view').classList.add('hidden');
+            document.getElementById('issues-feed').classList.remove('hidden');
+            document.getElementById('issues-feed').parentElement.querySelector('.flex.gap-2.mb-6').classList.remove('hidden');
+            document.querySelector('.grid.grid-cols-3.gap-3').classList.remove('hidden');
+            renderIssues();
+        }
+
+        // Пікір қосу логикасы
+        function addComment(event, issueId) {
+            event.preventDefault();
+            const author = document.getElementById('commentAuthor').value;
+            const text = document.getElementById('commentText').value;
+
+            const item = issues.find(i => i.id === issueId);
+            if (item) {
+                if (!item.comments) item.comments = [];
+                item.comments.push({
+                    author,
+                    text,
+                    date: "Жаңа ғана"
+                });
+                saveToStorage();
+                openDetail(issueId);
+            }
+        }
+
+        // Статусты өзгерту
+        function changeStatus(id, newStatus) {
+            const item = issues.find(i => i.id === id);
+            if (!item) return;
+
+            item.status = newStatus;
+            if (newStatus === 'new') {
+                item.statusText = 'Тіркелді';
+                item.statusColor = 'bg-red-50 text-red-600 border border-red-100';
+            } else if (newStatus === 'in_progress') {
+                item.statusText = 'Жұмысқа алынды';
+                item.statusColor = 'bg-amber-50 text-amber-600 border border-amber-100';
+            } else if (newStatus === 'resolved') {
+                item.statusText = 'Шешілді';
+                item.statusColor = 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+            }
+
+            saveToStorage();
+            renderIssues();
+        }
+
+        // Дауыс беру
+        function voteIssue(id) {
+            const item = issues.find(i => i.id === id);
+            if (item) {
+                item.votes += 1;
+                saveToStorage();
+                renderIssues();
+            }
+        }
+
+        // Модальды терезе басқару
         function openModal() { document.getElementById('issueModal').classList.remove('hidden'); document.getElementById('issueModal').classList.add('flex'); }
         function closeModal() { document.getElementById('issueModal').classList.add('hidden'); document.getElementById('issueModal').classList.remove('flex'); }
 
@@ -160,12 +363,12 @@
             const category = document.getElementById('category').value;
             const address = document.getElementById('address').value;
             const description = document.getElementById('description').value;
-            const imageInput = document.getElementById('image');
+            const imageFile = document.getElementById('imageFile');
 
-            let imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=600&q=80"; // дефолт сурет
+            let imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=800&q=80";
 
-            if (imageInput.files && imageInput.files[0]) {
-                imageUrl = URL.createObjectURL(imageInput.files[0]);
+            if (imageFile.files && imageFile.files[0]) {
+                imageUrl = URL.createObjectURL(imageFile.files[0]);
             }
 
             const newIssue = {
@@ -176,34 +379,28 @@
                 image: imageUrl,
                 status: "new",
                 statusText: "Тіркелді",
-                statusColor: "bg-red-100 text-red-700",
-                votes: 1
+                statusColor: "bg-red-50 text-red-600 border border-red-100",
+                votes: 1,
+                date: "Жаңа ғана",
+                comments: []
             };
 
             issues.unshift(newIssue);
+            saveToStorage();
             renderIssues();
             closeModal();
             document.getElementById('issueForm').reset();
         }
 
-        // Дауыс беру логикасы
-        function voteIssue(id) {
-            const item = issues.find(i => i.id === id);
-            if (item) {
-                item.votes += 1;
-                renderIssues();
-            }
-        }
-
-        // Фильтрация
+        // Сүзгілеу
         function filterIssues(status) {
             currentFilter = status;
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white');
-                btn.classList.add('bg-white', 'text-gray-600');
+                btn.classList.remove('bg-slate-900', 'text-white');
+                btn.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-100');
             });
-            event.target.classList.remove('bg-white', 'text-gray-600');
-            event.target.classList.add('bg-blue-600', 'text-white');
+            event.target.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-100');
+            event.target.classList.add('bg-slate-900', 'text-white');
             renderIssues();
         }
 
